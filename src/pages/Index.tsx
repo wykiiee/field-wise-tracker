@@ -40,6 +40,24 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      {/* Navigation */}
+      <nav className="container mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Leaf className="h-8 w-8 text-green-600" />
+            <span className="text-xl font-bold text-gray-900">Farm Inventory</span>
+          </div>
+          <div className="flex space-x-4">
+            <Button asChild variant="outline">
+              <Link to="/login">Sign In</Link>
+            </Button>
+            <Button asChild className="bg-green-600 hover:bg-green-700">
+              <Link to="/signup">Get Started</Link>
+            </Button>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <div className="container mx-auto px-6 py-16">
         <div className="text-center mb-16">
@@ -52,13 +70,15 @@ const Index = () => {
             Track supplies, manage equipment, and optimize your farm's efficiency.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-lg px-8">
-              <Link to="/dashboard">
-                Go to Dashboard
+            <Button asChild size="lg" className="text-lg px-8 bg-green-600 hover:bg-green-700">
+              <Link to="/signup">
+                Get Started Free
               </Link>
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8">
-              Learn More
+            <Button asChild variant="outline" size="lg" className="text-lg px-8">
+              <Link to="/login">
+                Sign In
+              </Link>
             </Button>
           </div>
         </div>
@@ -105,8 +125,8 @@ const Index = () => {
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
             Join hundreds of farmers who are already using our system to improve their operations and increase profitability.
           </p>
-          <Button asChild size="lg" className="text-lg px-8">
-            <Link to="/dashboard">
+          <Button asChild size="lg" className="text-lg px-8 bg-green-600 hover:bg-green-700">
+            <Link to="/signup">
               Start Managing Your Inventory
             </Link>
           </Button>

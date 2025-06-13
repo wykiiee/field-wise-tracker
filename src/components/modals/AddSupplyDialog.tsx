@@ -1,46 +1,81 @@
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Package } from "lucide-react";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 interface AddSupplyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const AddSupplyDialog = ({ open, onOpenChange }: AddSupplyDialogProps) => {
+export const AddSupplyDialog: React.FC<AddSupplyDialogProps> = ({ open, onOpenChange }) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    name: "",
-    category: "",
-    quantity: "",
-    unit: "",
-    cost: "",
-    supplier: "",
-    purchaseDate: "",
-    expiryDate: "",
-    notes: ""
+    name: '',
+    category: '',
+    quantity: '',
+    unit: '',
+    cost: '',
+    supplier: '',
+    description: ''
   });
+
+  const categories = [
+    'Fertilizers',
+    'Seeds',
+    'Pesticides',
+    'Tools',
+    'Equipment',
+    'Irrigation',
+    'Other'
+  ];
+
+  const units = [
+    'kg',
+    'bags',
+    'liters',
+    'pieces',
+    'meters',
+    'tons',
+    'gallons'
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Adding supply:", formData);
-    // Here you would typically send the data to your backend
-    onOpenChange(false);
-    setFormData({
-      name: "",
-      category: "",
-      quantity: "",
-      unit: "",
-      cost: "",
-      supplier: "",
-      purchaseDate: "",
-      expiryDate: "",
-      notes: ""
+    
+    if (!formData.name || !formData.category || !formData.quantity || !formData.unit) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Here you would typically save to your database
+    console.log('Adding supply:', formData);
+    
+    toast({
+      title: "Success",
+      description: "Supply item added successfully",
     });
+
+    // Reset form and close dialog
+    setFormData({
+      name: '',
+      category: '',
+      quantity: '',
+      unit: '',
+      cost: '',
+      supplier: '',
+      description: ''
+    });
+    onOpenChange(false);
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -49,125 +84,114 @@ export const AddSupplyDialog = ({ open, onOpenChange }: AddSupplyDialogProps) =>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Add New Supply
-          </DialogTitle>
-          <DialogDescription>
-            Add a new supply item to your farm inventory
-          </DialogDescription>
+          <DialogTitle>Add New Supply Item</DialogTitle>
         </DialogHeader>
-
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Supply Name</Label>
+              <Label htmlFor="name">Item Name *</Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="e.g., NPK Fertilizer"
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="Enter item name"
                 required
               />
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                value={formData.category}
-                onChange={(e) => handleInputChange("category", e.target.value)}
-                placeholder="e.g., Fertilizers"
-                required
-              />
+              <Label htmlFor="category">Category *</Label>
+              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label htmlFor="quantity">Quantity *</Label>
               <Input
                 id="quantity"
                 type="number"
                 value={formData.quantity}
-                onChange={(e) => handleInputChange("quantity", e.target.value)}
-                placeholder="0"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="unit">Unit</Label>
-              <Input
-                id="unit"
-                value={formData.unit}
-                onChange={(e) => handleInputChange("unit", e.target.value)}
-                placeholder="e.g., bags, kg, liters"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cost">Cost per Unit ($)</Label>
-              <Input
-                id="cost"
-                type="number"
+                onChange={(e) => handleInputChange('quantity', e.target.value)}
+                placeholder="Enter quantity"
+                min="0"
                 step="0.01"
-                value={formData.cost}
-                onChange={(e) => handleInputChange("cost", e.target.value)}
-                placeholder="0.00"
                 required
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="supplier">Supplier</Label>
-            <Input
-              id="supplier"
-              value={formData.supplier}
-              onChange={(e) => handleInputChange("supplier", e.target.value)}
-              placeholder="Supplier name"
-            />
+            
+            <div className="space-y-2">
+              <Label htmlFor="unit">Unit *</Label>
+              <Select value={formData.unit} onValueChange={(value) => handleInputChange('unit', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {units.map((unit) => (
+                    <SelectItem key={unit} value={unit}>
+                      {unit}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="purchaseDate">Purchase Date</Label>
+              <Label htmlFor="cost">Cost per Unit</Label>
               <Input
-                id="purchaseDate"
-                type="date"
-                value={formData.purchaseDate}
-                onChange={(e) => handleInputChange("purchaseDate", e.target.value)}
-                required
+                id="cost"
+                type="number"
+                value={formData.cost}
+                onChange={(e) => handleInputChange('cost', e.target.value)}
+                placeholder="Enter cost"
+                min="0"
+                step="0.01"
               />
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="expiryDate">Expiry Date</Label>
+              <Label htmlFor="supplier">Supplier</Label>
               <Input
-                id="expiryDate"
-                type="date"
-                value={formData.expiryDate}
-                onChange={(e) => handleInputChange("expiryDate", e.target.value)}
+                id="supplier"
+                value={formData.supplier}
+                onChange={(e) => handleInputChange('supplier', e.target.value)}
+                placeholder="Enter supplier name"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleInputChange("notes", e.target.value)}
-              placeholder="Additional notes about this supply..."
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Enter item description"
               rows={3}
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="bg-green-600 hover:bg-green-700">
               Add Supply
             </Button>
           </div>

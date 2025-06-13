@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 id: profile.id,
                 name: profile.name || '',
                 email: profile.email || '',
-                role: profile.role
+                role: profile.role as 'farmer' | 'admin' | 'extension_officer'
               });
             }
           }, 0);
@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: profile.id,
               name: profile.name || '',
               email: profile.email || '',
-              role: profile.role
+              role: profile.role as 'farmer' | 'admin' | 'extension_officer'
             });
           }
           setLoading(false);

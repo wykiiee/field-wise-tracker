@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +14,7 @@ export const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { login, loading } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,12 +28,12 @@ export const LoginForm: React.FC = () => {
       return;
     }
 
-    const success = await login(email, password);
+    const { error } = await login(email, password);
     
-    if (!success) {
+    if (error) {
       toast({
         title: "Login Failed",
-        description: "Invalid email or password",
+        description: error,
         variant: "destructive"
       });
     } else {
@@ -40,6 +41,7 @@ export const LoginForm: React.FC = () => {
         title: "Welcome back!",
         description: "You have successfully logged in",
       });
+      navigate('/dashboard');
     }
   };
 
@@ -95,13 +97,6 @@ export const LoginForm: React.FC = () => {
       </Button>
 
       <div className="text-center space-y-4">
-        <Link 
-          to="/forgot-password" 
-          className="text-sm text-green-600 hover:text-green-700 hover:underline"
-        >
-          Forgot your password?
-        </Link>
-        
         <div className="text-sm text-gray-600">
           Don't have an account?{' '}
           <Link 

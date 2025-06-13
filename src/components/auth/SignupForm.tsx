@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const SignupForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +19,7 @@ export const SignupForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { signup, loading } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,19 +51,20 @@ export const SignupForm: React.FC = () => {
       return;
     }
 
-    const success = await signup(formData.name, formData.email, formData.password, formData.role);
+    const { error } = await signup(formData.name, formData.email, formData.password, formData.role);
     
-    if (!success) {
+    if (error) {
       toast({
         title: "Signup Failed",
-        description: "Something went wrong. Please try again.",
+        description: error,
         variant: "destructive"
       });
     } else {
       toast({
         title: "Welcome!",
-        description: "Your account has been created successfully",
+        description: "Please check your email to confirm your account",
       });
+      navigate('/login');
     }
   };
 

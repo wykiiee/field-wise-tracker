@@ -33,8 +33,6 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

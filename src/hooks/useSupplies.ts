@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export interface Supply {
   id: string;
@@ -34,7 +34,6 @@ export interface CreateSupplyData {
 
 export const useSupplies = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: supplies = [], isLoading, error } = useQuery({
@@ -80,19 +79,18 @@ export const useSupplies = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['supplies'] });
-      toast({
-        title: "Success",
-        description: "Supply item added successfully",
+      toast.success("🌱 Supply Added Successfully!", {
+        description: `${data.name} has been added to your inventory`,
+        duration: 4000,
       });
     },
     onError: (error) => {
       console.error('Create supply error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add supply item",
-        variant: "destructive",
+      toast.error("❌ Failed to Add Supply", {
+        description: "There was an error adding the supply item. Please try again.",
+        duration: 4000,
       });
     },
   });
@@ -113,19 +111,18 @@ export const useSupplies = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['supplies'] });
-      toast({
-        title: "Success",
-        description: "Supply item updated successfully",
+      toast.success("✅ Supply Updated!", {
+        description: `${data.name} has been updated successfully`,
+        duration: 3000,
       });
     },
     onError: (error) => {
       console.error('Update supply error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update supply item",
-        variant: "destructive",
+      toast.error("❌ Update Failed", {
+        description: "Failed to update supply item. Please try again.",
+        duration: 4000,
       });
     },
   });
@@ -144,17 +141,16 @@ export const useSupplies = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplies'] });
-      toast({
-        title: "Success",
-        description: "Supply item deleted successfully",
+      toast.success("🗑️ Supply Removed", {
+        description: "Supply item has been deleted from your inventory",
+        duration: 3000,
       });
     },
     onError: (error) => {
       console.error('Delete supply error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete supply item",
-        variant: "destructive",
+      toast.error("❌ Delete Failed", {
+        description: "Failed to delete supply item. Please try again.",
+        duration: 4000,
       });
     },
   });

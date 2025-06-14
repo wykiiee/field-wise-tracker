@@ -11,6 +11,7 @@ import { Link, useNavigate } from 'react-router-dom';
 export const SignupForm: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -24,7 +25,7 @@ export const SignupForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.password) {
+    if (!formData.name || !formData.username || !formData.email || !formData.password) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -51,7 +52,7 @@ export const SignupForm: React.FC = () => {
       return;
     }
 
-    const { error } = await signup(formData.name, formData.email, formData.password, formData.role);
+    const { error } = await signup(formData.name, formData.username, formData.email, formData.password, formData.role);
     
     if (error) {
       toast({
@@ -82,6 +83,22 @@ export const SignupForm: React.FC = () => {
               className="pl-10"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
+              disabled={loading}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="username">Username</Label>
+          <div className="relative">
+            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              id="username"
+              type="text"
+              placeholder="Choose a username"
+              className="pl-10"
+              value={formData.username}
+              onChange={(e) => setFormData({...formData, username: e.target.value})}
               disabled={loading}
             />
           </div>

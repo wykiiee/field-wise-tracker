@@ -103,6 +103,7 @@ export type Database = {
           name: string | null
           role: string
           updated_at: string
+          username: string | null
         }
         Insert: {
           created_at?: string
@@ -111,6 +112,7 @@ export type Database = {
           name?: string | null
           role?: string
           updated_at?: string
+          username?: string | null
         }
         Update: {
           created_at?: string
@@ -119,6 +121,7 @@ export type Database = {
           name?: string | null
           role?: string
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -216,6 +219,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_by_username: {
+        Args: { input_username: string }
+        Returns: {
+          user_id: string
+          email: string
+          name: string
+          role: string
+        }[]
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: string

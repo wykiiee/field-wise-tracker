@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface UserProfile {
   id: string;
   name: string;
+  username: string;
   email: string;
   role: 'farmer' | 'admin' | 'extension_officer';
 }
@@ -13,8 +14,8 @@ interface UserProfile {
 interface AuthContextType {
   user: UserProfile | null;
   session: Session | null;
-  login: (email: string, password: string) => Promise<{ error?: string }>;
-  signup: (name: string, email: string, password: string, role: string) => Promise<{ error?: string }>;
+  login: (username: string, password: string) => Promise<{ error?: string }>;
+  signup: (name: string, username: string, email: string, password: string, role: string) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -61,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {
         id: data.id,
         name: data.name || '',
+        username: data.username || '',
         email: data.email || '',
         role: data.role as 'farmer' | 'admin' | 'extension_officer'
       };
@@ -129,20 +131,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     try {
       setLoading(true);
-      console.log('Attempting login for:', email);
+      console.log('Attempting login for username:', username);
       
+      // First, get the user's email from their username
+      const { data: userData, error: userError } = await supabase
+        .rpc('get_user_by_username', { input_username: username });
+
+      if (userError || !userData || userData.length === 0) {
+        console.error('Username not found:', userError);
+        setLoading(false);
+        return { error: 'Invalid username or password' };
+      }
+
+      const userEmail = userData[0].email;
+      
+      // Now authenticate with email and password
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: userEmail,
         password
       });
 
       if (error) {
         console.error('Login error:', error);
         setLoading(false);
-        return { error: error.message };
+        return { error: 'Invalid username or password' };
       }
 
       console.log('Login successful:', data);
@@ -154,10 +169,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (name: string, email: string, password: string, role: string) => {
+  const signup = async (name: string, username: string, email: string, password: string, role: string) => {
     try {
       setLoading(true);
-      console.log('Attempting signup for:', email, 'with role:', role);
+      console.log('Attempting signup for:', email, 'with username:', username, 'and role:', role);
       
       const redirectUrl = `${window.location.origin}/`;
       
@@ -168,6 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           emailRedirectTo: redirectUrl,
           data: {
             name,
+            username,
             role
           }
         }

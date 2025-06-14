@@ -9,6 +9,92 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      equipment: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          last_maintenance_date: string | null
+          name: string
+          next_maintenance_date: string | null
+          purchase_cost: number | null
+          purchase_date: string | null
+          status: Database["public"]["Enums"]["equipment_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_maintenance_date?: string | null
+          name: string
+          next_maintenance_date?: string | null
+          purchase_cost?: number | null
+          purchase_date?: string | null
+          status?: Database["public"]["Enums"]["equipment_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_maintenance_date?: string | null
+          name?: string
+          next_maintenance_date?: string | null
+          purchase_cost?: number | null
+          purchase_date?: string | null
+          status?: Database["public"]["Enums"]["equipment_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      equipment_maintenance: {
+        Row: {
+          cost: number | null
+          description: string | null
+          equipment_id: string
+          id: string
+          maintenance_date: string
+          maintenance_type: string
+          performed_by: string | null
+          user_id: string
+        }
+        Insert: {
+          cost?: number | null
+          description?: string | null
+          equipment_id: string
+          id?: string
+          maintenance_date?: string
+          maintenance_type: string
+          performed_by?: string | null
+          user_id: string
+        }
+        Update: {
+          cost?: number | null
+          description?: string | null
+          equipment_id?: string
+          id?: string
+          maintenance_date?: string
+          maintenance_type?: string
+          performed_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_maintenance_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -36,15 +122,109 @@ export type Database = {
         }
         Relationships: []
       }
+      supplies: {
+        Row: {
+          category: string
+          cost_per_unit: number | null
+          created_at: string
+          description: string | null
+          id: string
+          low_stock_threshold: number | null
+          name: string
+          quantity: number
+          status: Database["public"]["Enums"]["supply_status"]
+          supplier: string | null
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          cost_per_unit?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          low_stock_threshold?: number | null
+          name: string
+          quantity?: number
+          status?: Database["public"]["Enums"]["supply_status"]
+          supplier?: string | null
+          unit: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          cost_per_unit?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          low_stock_threshold?: number | null
+          name?: string
+          quantity?: number
+          status?: Database["public"]["Enums"]["supply_status"]
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      supply_transactions: {
+        Row: {
+          cost: number | null
+          id: string
+          notes: string | null
+          quantity: number
+          supply_id: string
+          transaction_date: string
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
+        }
+        Insert: {
+          cost?: number | null
+          id?: string
+          notes?: string | null
+          quantity: number
+          supply_id: string
+          transaction_date?: string
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
+        }
+        Update: {
+          cost?: number | null
+          id?: string
+          notes?: string | null
+          quantity?: number
+          supply_id?: string
+          transaction_date?: string
+          transaction_type?: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supply_transactions_supply_id_fkey"
+            columns: ["supply_id"]
+            isOneToOne: false
+            referencedRelation: "supplies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      equipment_status: "operational" | "maintenance" | "repair" | "retired"
+      supply_status: "in_stock" | "low_stock" | "out_of_stock"
+      transaction_type: "purchase" | "usage" | "waste" | "transfer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -159,6 +339,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      equipment_status: ["operational", "maintenance", "repair", "retired"],
+      supply_status: ["in_stock", "low_stock", "out_of_stock"],
+      transaction_type: ["purchase", "usage", "waste", "transfer"],
+    },
   },
 } as const

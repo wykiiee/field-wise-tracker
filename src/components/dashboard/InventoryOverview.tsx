@@ -1,124 +1,119 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, Package, TrendingUp } from 'lucide-react';
+import { useSupplies } from '@/hooks/useSupplies';
+import { Package, AlertTriangle, TrendingDown, DollarSign } from 'lucide-react';
 
 export const InventoryOverview: React.FC = () => {
-  const inventoryItems = [
-    { name: 'Fertilizer', current: 85, max: 100, unit: 'bags', status: 'good' },
-    { name: 'Seeds (Corn)', current: 20, max: 50, unit: 'kg', status: 'low' },
-    { name: 'Pesticide', current: 15, max: 40, unit: 'liters', status: 'low' },
-    { name: 'Tools', current: 45, max: 50, unit: 'items', status: 'good' },
-  ];
+  const { supplies, isLoading } = useSupplies();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'low': return 'text-red-600';
-      case 'medium': return 'text-yellow-600';
-      default: return 'text-green-600';
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Loading inventory overview...</p>
+      </div>
+    );
+  }
 
-  const getProgressValue = (current: number, max: number) => {
-    return (current / max) * 100;
-  };
+  const totalSupplies = supplies.length;
+  const inStockCount = supplies.filter(s => s.status === 'in_stock').length;
+  const lowStockCount = supplies.filter(s => s.status === 'low_stock').length;
+  const outOfStockCount = supplies.filter(s => s.status === 'out_of_stock').length;
+  
+  const totalValue = supplies.reduce((sum, supply) => {
+    return sum + (supply.cost_per_unit ? supply.quantity * supply.cost_per_unit : 0);
+  }, 0);
+
+  const recentSupplies = supplies
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5);
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Inventory Status */}
+      <h2 className="text-2xl font-bold">Inventory Overview</h2>
+      
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Current Inventory Levels
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Supplies</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="space-y-4">
-            {inventoryItems.map((item, index) => (
-              <div key={index} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">{item.name}</span>
-                  <span className={`text-sm ${getStatusColor(item.status)}`}>
-                    {item.current}/{item.max} {item.unit}
-                  </span>
-                </div>
-                <Progress 
-                  value={getProgressValue(item.current, item.max)} 
-                  className={`h-2 ${item.status === 'low' ? 'bg-red-100' : 'bg-green-100'}`}
-                />
-              </div>
-            ))}
+          <CardContent>
+            <div className="text-2xl font-bold">{totalSupplies}</div>
+            <p className="text-xs text-muted-foreground">
+              {inStockCount} in stock
+            </p>
           </CardContent>
         </Card>
-
-        {/* Alerts */}
+        
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-600" />
-              Inventory Alerts
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-yellow-600" />
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-                <span className="font-medium text-red-800">Low Stock Alert</span>
-              </div>
-              <p className="text-sm text-red-700 mt-1">
-                Seeds (Corn) is running low. Only 20kg remaining.
-              </p>
-            </div>
-            
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <span className="font-medium text-yellow-800">Stock Warning</span>
-              </div>
-              <p className="text-sm text-yellow-700 mt-1">
-                Pesticide levels are below recommended threshold.
-              </p>
-            </div>
+          <CardContent>
+            <div className="text-2xl font-bold">{lowStockCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Need restocking
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
+            <TrendingDown className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{outOfStockCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Immediate attention needed
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Value</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${totalValue.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              Current inventory value
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Supplies */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Recent Inventory Activity
-          </CardTitle>
+          <CardTitle>Recently Added Supplies</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div>
-                <p className="font-medium">Fertilizer Purchase</p>
-                <p className="text-sm text-muted-foreground">Added 25 bags to inventory</p>
-              </div>
-              <div className="text-sm text-muted-foreground">2 hours ago</div>
+          {recentSupplies.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">No supplies added yet</p>
+          ) : (
+            <div className="space-y-3">
+              {recentSupplies.map((supply) => (
+                <div key={supply.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                  <div>
+                    <p className="font-medium">{supply.name}</p>
+                    <p className="text-sm text-muted-foreground">{supply.category}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">{supply.quantity} {supply.unit}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(supply.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div>
-                <p className="font-medium">Equipment Usage</p>
-                <p className="text-sm text-muted-foreground">Tractor used for 4 hours</p>
-              </div>
-              <div className="text-sm text-muted-foreground">Yesterday</div>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div>
-                <p className="font-medium">Seeds Planted</p>
-                <p className="text-sm text-muted-foreground">Used 15kg corn seeds</p>
-              </div>
-              <div className="text-sm text-muted-foreground">3 days ago</div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

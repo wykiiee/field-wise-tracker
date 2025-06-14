@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { useSupplies, CreateSupplyData } from '@/hooks/useSupplies';
 
 interface AddSupplyDialogProps {
   open: boolean;
@@ -14,15 +14,16 @@ interface AddSupplyDialogProps {
 }
 
 export const AddSupplyDialog: React.FC<AddSupplyDialogProps> = ({ open, onOpenChange }) => {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({
+  const { createSupply, isCreating } = useSupplies();
+  const [formData, setFormData] = useState<CreateSupplyData>({
     name: '',
     category: '',
-    quantity: '',
+    quantity: 0,
     unit: '',
-    cost: '',
+    cost_per_unit: undefined,
     supplier: '',
-    description: ''
+    description: '',
+    low_stock_threshold: 0,
   });
 
   const categories = [
@@ -49,36 +50,34 @@ export const AddSupplyDialog: React.FC<AddSupplyDialogProps> = ({ open, onOpenCh
     e.preventDefault();
     
     if (!formData.name || !formData.category || !formData.quantity || !formData.unit) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
       return;
     }
 
-    // Here you would typically save to your database
-    console.log('Adding supply:', formData);
-    
-    toast({
-      title: "Success",
-      description: "Supply item added successfully",
-    });
+    const submitData: CreateSupplyData = {
+      ...formData,
+      cost_per_unit: formData.cost_per_unit || undefined,
+      supplier: formData.supplier || undefined,
+      description: formData.description || undefined,
+      low_stock_threshold: formData.low_stock_threshold || 0,
+    };
+
+    createSupply(submitData);
 
     // Reset form and close dialog
     setFormData({
       name: '',
       category: '',
-      quantity: '',
+      quantity: 0,
       unit: '',
-      cost: '',
+      cost_per_unit: undefined,
       supplier: '',
-      description: ''
+      description: '',
+      low_stock_threshold: 0,
     });
     onOpenChange(false);
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof CreateSupplyData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -125,8 +124,8 @@ export const AddSupplyDialog: React.FC<AddSupplyDialogProps> = ({ open, onOpenCh
               <Input
                 id="quantity"
                 type="number"
-                value={formData.quantity}
-                onChange={(e) => handleInputChange('quantity', e.target.value)}
+                value={formData.quantity || ''}
+                onChange={(e) => handleInputChange('quantity', Number(e.target.value))}
                 placeholder="Enter quantity"
                 min="0"
                 step="0.01"
@@ -157,8 +156,8 @@ export const AddSupplyDialog: React.FC<AddSupplyDialogProps> = ({ open, onOpenCh
               <Input
                 id="cost"
                 type="number"
-                value={formData.cost}
-                onChange={(e) => handleInputChange('cost', e.target.value)}
+                value={formData.cost_per_unit || ''}
+                onChange={(e) => handleInputChange('cost_per_unit', Number(e.target.value))}
                 placeholder="Enter cost"
                 min="0"
                 step="0.01"
@@ -169,7 +168,7 @@ export const AddSupplyDialog: React.FC<AddSupplyDialogProps> = ({ open, onOpenCh
               <Label htmlFor="supplier">Supplier</Label>
               <Input
                 id="supplier"
-                value={formData.supplier}
+                value={formData.supplier || ''}
                 onChange={(e) => handleInputChange('supplier', e.target.value)}
                 placeholder="Enter supplier name"
               />
@@ -177,10 +176,23 @@ export const AddSupplyDialog: React.FC<AddSupplyDialogProps> = ({ open, onOpenCh
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="low_stock_threshold">Low Stock Threshold</Label>
+            <Input
+              id="low_stock_threshold"
+              type="number"
+              value={formData.low_stock_threshold || ''}
+              onChange={(e) => handleInputChange('low_stock_threshold', Number(e.target.value))}
+              placeholder="Enter low stock threshold"
+              min="0"
+              step="0.01"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={formData.description}
+              value={formData.description || ''}
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Enter item description"
               rows={3}
@@ -191,8 +203,8 @@ export const AddSupplyDialog: React.FC<AddSupplyDialogProps> = ({ open, onOpenCh
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-green-600 hover:bg-green-700">
-              Add Supply
+            <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={isCreating}>
+              {isCreating ? 'Adding...' : 'Add Supply'}
             </Button>
           </div>
         </form>

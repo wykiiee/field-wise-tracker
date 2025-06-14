@@ -44,6 +44,7 @@ export const useSupplies = () => {
       const { data, error } = await supabase
         .from('supplies')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -101,6 +102,7 @@ export const useSupplies = () => {
         .from('supplies')
         .update(updates)
         .eq('id', id)
+        .eq('user_id', user?.id)
         .select()
         .single();
 
@@ -132,7 +134,8 @@ export const useSupplies = () => {
       const { error } = await supabase
         .from('supplies')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user?.id);
 
       if (error) {
         console.error('Error deleting supply:', error);

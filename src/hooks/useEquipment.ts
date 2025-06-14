@@ -43,6 +43,7 @@ export const useEquipment = () => {
       const { data, error } = await supabase
         .from('equipment')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -99,6 +100,7 @@ export const useEquipment = () => {
         .from('equipment')
         .update(updates)
         .eq('id', id)
+        .eq('user_id', user?.id)
         .select()
         .single();
 
@@ -130,7 +132,8 @@ export const useEquipment = () => {
       const { error } = await supabase
         .from('equipment')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user?.id);
 
       if (error) {
         console.error('Error deleting equipment:', error);

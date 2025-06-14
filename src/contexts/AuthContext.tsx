@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
@@ -55,6 +55,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return fetchUserProfile(userId, retryCount + 1);
         }
         
+        return null;
+      }
+
+      if (!data) {
+        console.log('No profile data found for user:', userId);
         return null;
       }
 
@@ -80,13 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('User session found, fetching profile...');
       try {
         const profile = await fetchUserProfile(session.user.id);
-        if (profile) {
-          console.log('Setting user profile:', profile);
-          setUser(profile);
-        } else {
-          console.log('No profile found for user');
-          setUser(null);
-        }
+        setUser(profile);
       } catch (error) {
         console.error('Error in handleAuthChange:', error);
         setUser(null);
@@ -102,10 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log('Setting up auth state listener...');
     
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-    // Check for existing session
     const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -136,19 +133,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       console.log('Attempting login for username:', username);
       
-      // First, get the user's email from their username
-      const { data: userData, error: userError } = await supabase
-        .rpc('get_user_by_username', { input_username: username });
+      if (!username.trim() || !password.trim()) {
+        setLoading(false);
+        return { error: 'Username and password are required' };
+      }
 
-      if (userError || !userData || userData.length === 0) {
-        console.error('Username not found:', userError);
+      const { data: userData, error: userError } = await supabase
+        .rpc('get_user_by_username', { input_username: username.trim().toLowerCase() });
+
+      if (userError) {
+        console.error('Error looking up username:', userError);
+        setLoading(false);
+        return { error: 'Invalid username or password' };
+      }
+
+      if (!userData || userData.length === 0) {
+        console.error('Username not found');
         setLoading(false);
         return { error: 'Invalid username or password' };
       }
 
       const userEmail = userData[0].email;
       
-      // Now authenticate with email and password
       const { data, error } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password
@@ -174,9 +180,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       console.log('Attempting signup for:', email, 'with username:', username, 'and role:', role);
       
+      // Validate inputs
+      if (!name.trim() || !username.trim() || !email.trim() || !password.trim()) {
+        setLoading(false);
+        return { error: 'All fields are required' };
+      }
+
+      // Username validation
+      const cleanUsername = username.trim().toLowerCase();
+      if (cleanUsername.length < 3) {
+        setLoading(false);
+        return { error: 'Username must be at least 3 characters' };
+      }
+
+      if (!/^[a-z0-9_]+$/.test(cleanUsername)) {
+        setLoading(false);
+        return { error: 'Username can only contain letters, numbers, and underscores' };
+      }
+
       // Check if username already exists
       const { data: existingUser, error: checkError } = await supabase
-        .rpc('get_user_by_username', { input_username: username });
+        .rpc('get_user_by_username', { input_username: cleanUsername });
 
       if (checkError) {
         console.error('Error checking username:', checkError);
@@ -192,13 +216,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            name,
-            username,
+            name: name.trim(),
+            username: cleanUsername,
             role
           }
         }

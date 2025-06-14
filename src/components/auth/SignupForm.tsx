@@ -26,7 +26,8 @@ export const SignupForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.username || !formData.email || !formData.password) {
+    // Client-side validation
+    if (!formData.name.trim() || !formData.username.trim() || !formData.email.trim() || !formData.password.trim()) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -53,27 +54,25 @@ export const SignupForm: React.FC = () => {
       return;
     }
 
-    // Username validation
-    if (formData.username.length < 3) {
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
       toast({
         title: "Error",
-        description: "Username must be at least 3 characters",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      toast({
-        title: "Error",
-        description: "Username can only contain letters, numbers, and underscores",
+        description: "Please enter a valid email address",
         variant: "destructive"
       });
       return;
     }
 
     setIsLoading(true);
-    const { error } = await signup(formData.name, formData.username, formData.email, formData.password, formData.role);
+    const { error } = await signup(
+      formData.name.trim(),
+      formData.username.trim(),
+      formData.email.trim(),
+      formData.password,
+      formData.role
+    );
     setIsLoading(false);
     
     if (error) {
@@ -91,6 +90,12 @@ export const SignupForm: React.FC = () => {
     }
   };
 
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Clean and format username input
+    const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setFormData({...formData, username: value});
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
@@ -106,6 +111,7 @@ export const SignupForm: React.FC = () => {
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               disabled={isLoading}
+              autoComplete="name"
             />
           </div>
         </div>
@@ -120,11 +126,14 @@ export const SignupForm: React.FC = () => {
               placeholder="Choose a unique username"
               className="pl-10"
               value={formData.username}
-              onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')})}
+              onChange={handleUsernameChange}
               disabled={isLoading}
+              autoComplete="username"
             />
           </div>
-          <p className="text-xs text-gray-500">Only letters, numbers, and underscores allowed</p>
+          <p className="text-xs text-gray-500">
+            Must be at least 3 characters. Only letters, numbers, and underscores allowed.
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -139,6 +148,7 @@ export const SignupForm: React.FC = () => {
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
               disabled={isLoading}
+              autoComplete="email"
             />
           </div>
         </div>
@@ -150,16 +160,18 @@ export const SignupForm: React.FC = () => {
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Create a password"
+              placeholder="Create a password (min 6 characters)"
               className="pl-10 pr-10"
               value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
               disabled={isLoading}
+              autoComplete="new-password"
             />
             <button
               type="button"
               className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -178,6 +190,7 @@ export const SignupForm: React.FC = () => {
               value={formData.confirmPassword}
               onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
               disabled={isLoading}
+              autoComplete="new-password"
             />
           </div>
         </div>
@@ -186,7 +199,7 @@ export const SignupForm: React.FC = () => {
           <Label htmlFor="role">Role</Label>
           <select
             id="role"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             value={formData.role}
             onChange={(e) => setFormData({...formData, role: e.target.value})}
             disabled={isLoading}

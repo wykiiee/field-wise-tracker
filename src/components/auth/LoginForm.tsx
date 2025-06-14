@@ -20,7 +20,7 @@ export const LoginForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!username || !password) {
+    if (!username.trim() || !password.trim()) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -30,7 +30,7 @@ export const LoginForm: React.FC = () => {
     }
 
     setIsLoading(true);
-    const { error } = await login(username, password);
+    const { error } = await login(username.trim(), password);
     setIsLoading(false);
     
     if (error) {
@@ -48,6 +48,12 @@ export const LoginForm: React.FC = () => {
     }
   };
 
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Clean and format username input
+    const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setUsername(value);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
@@ -61,8 +67,9 @@ export const LoginForm: React.FC = () => {
               placeholder="Enter your username"
               className="pl-10"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={handleUsernameChange}
               disabled={isLoading}
+              autoComplete="username"
             />
           </div>
         </div>
@@ -79,11 +86,13 @@ export const LoginForm: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
+              autoComplete="current-password"
             />
             <button
               type="button"
               className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

@@ -40,9 +40,17 @@ export const useSignupForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Starting signup process with data:', {
+      name: formData.name,
+      username: formData.username,
+      email: formData.email,
+      role: formData.role
+    });
+    
     // Client-side validation
     const validationError = validateSignupForm(formData);
     if (validationError) {
+      console.log('Validation error:', validationError);
       toast({
         title: "Error",
         description: validationError.message,
@@ -52,6 +60,8 @@ export const useSignupForm = () => {
     }
 
     setIsLoading(true);
+    console.log('Calling signup function...');
+    
     const { error } = await signup(
       formData.name.trim(),
       formData.username.trim(),
@@ -59,15 +69,18 @@ export const useSignupForm = () => {
       formData.password,
       formData.role
     );
+    
     setIsLoading(false);
     
     if (error) {
+      console.error('Signup error:', error);
       toast({
         title: "Signup Failed",
         description: error,
         variant: "destructive"
       });
     } else {
+      console.log('Signup successful!');
       toast({
         title: "Welcome!",
         description: "Please check your email to confirm your account",

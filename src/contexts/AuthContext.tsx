@@ -199,6 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Check if username already exists
+      console.log('Checking if username exists:', cleanUsername);
       const { data: existingUser, error: checkError } = await supabase
         .rpc('get_user_by_username', { input_username: cleanUsername });
 
@@ -209,10 +210,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (existingUser && existingUser.length > 0) {
+        console.log('Username already exists');
         setLoading(false);
         return { error: 'Username is already taken' };
       }
       
+      console.log('Username is available, proceeding with signup...');
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
@@ -229,12 +232,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error('Signup error:', error);
+        console.error('Signup error from Supabase:', error);
         setLoading(false);
         return { error: error.message };
       }
 
-      console.log('Signup successful:', data);
+      console.log('Signup response from Supabase:', data);
+      
+      // Check if user was created successfully
+      if (data.user) {
+        console.log('User created successfully:', data.user.id);
+      } else {
+        console.log('No user object in response, but no error either');
+      }
+
       setLoading(false);
       return {};
     } catch (error) {

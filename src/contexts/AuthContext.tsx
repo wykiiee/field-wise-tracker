@@ -174,6 +174,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       console.log('Attempting signup for:', email, 'with username:', username, 'and role:', role);
       
+      // Check if username already exists
+      const { data: existingUser, error: checkError } = await supabase
+        .rpc('get_user_by_username', { input_username: username });
+
+      if (checkError) {
+        console.error('Error checking username:', checkError);
+        setLoading(false);
+        return { error: 'An error occurred while checking username availability' };
+      }
+
+      if (existingUser && existingUser.length > 0) {
+        setLoading(false);
+        return { error: 'Username is already taken' };
+      }
+      
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({

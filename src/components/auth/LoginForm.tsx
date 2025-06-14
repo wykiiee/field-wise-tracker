@@ -12,7 +12,8 @@ export const LoginForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, loading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -28,7 +29,9 @@ export const LoginForm: React.FC = () => {
       return;
     }
 
+    setIsLoading(true);
     const { error } = await login(username, password);
+    setIsLoading(false);
     
     if (error) {
       toast({
@@ -59,7 +62,7 @@ export const LoginForm: React.FC = () => {
               className="pl-10"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              disabled={loading}
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -75,7 +78,7 @@ export const LoginForm: React.FC = () => {
               className="pl-10 pr-10"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
+              disabled={isLoading}
             />
             <button
               type="button"
@@ -91,9 +94,9 @@ export const LoginForm: React.FC = () => {
       <Button 
         type="submit" 
         className="w-full bg-green-600 hover:bg-green-700" 
-        disabled={loading}
+        disabled={isLoading}
       >
-        {loading ? "Signing in..." : "Sign In"}
+        {isLoading ? "Signing in..." : "Sign In"}
       </Button>
 
       <div className="text-center space-y-4">

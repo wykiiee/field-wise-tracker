@@ -18,7 +18,8 @@ export const SignupForm: React.FC = () => {
     role: 'farmer'
   });
   const [showPassword, setShowPassword] = useState(false);
-  const { signup, loading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { signup } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -52,7 +53,28 @@ export const SignupForm: React.FC = () => {
       return;
     }
 
+    // Username validation
+    if (formData.username.length < 3) {
+      toast({
+        title: "Error",
+        description: "Username must be at least 3 characters",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      toast({
+        title: "Error",
+        description: "Username can only contain letters, numbers, and underscores",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
     const { error } = await signup(formData.name, formData.username, formData.email, formData.password, formData.role);
+    setIsLoading(false);
     
     if (error) {
       toast({
@@ -83,7 +105,7 @@ export const SignupForm: React.FC = () => {
               className="pl-10"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
-              disabled={loading}
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -95,13 +117,14 @@ export const SignupForm: React.FC = () => {
             <Input
               id="username"
               type="text"
-              placeholder="Choose a username"
+              placeholder="Choose a unique username"
               className="pl-10"
               value={formData.username}
-              onChange={(e) => setFormData({...formData, username: e.target.value})}
-              disabled={loading}
+              onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')})}
+              disabled={isLoading}
             />
           </div>
+          <p className="text-xs text-gray-500">Only letters, numbers, and underscores allowed</p>
         </div>
 
         <div className="space-y-2">
@@ -115,7 +138,7 @@ export const SignupForm: React.FC = () => {
               className="pl-10"
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
-              disabled={loading}
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -131,7 +154,7 @@ export const SignupForm: React.FC = () => {
               className="pl-10 pr-10"
               value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
-              disabled={loading}
+              disabled={isLoading}
             />
             <button
               type="button"
@@ -154,7 +177,7 @@ export const SignupForm: React.FC = () => {
               className="pl-10"
               value={formData.confirmPassword}
               onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-              disabled={loading}
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -166,7 +189,7 @@ export const SignupForm: React.FC = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             value={formData.role}
             onChange={(e) => setFormData({...formData, role: e.target.value})}
-            disabled={loading}
+            disabled={isLoading}
           >
             <option value="farmer">Farmer</option>
             <option value="admin">Admin</option>
@@ -178,9 +201,9 @@ export const SignupForm: React.FC = () => {
       <Button 
         type="submit" 
         className="w-full bg-green-600 hover:bg-green-700" 
-        disabled={loading}
+        disabled={isLoading}
       >
-        {loading ? "Creating Account..." : "Create Account"}
+        {isLoading ? "Creating Account..." : "Create Account"}
       </Button>
 
       <div className="text-center">

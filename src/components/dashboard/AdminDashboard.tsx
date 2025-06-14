@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,12 +7,15 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Users, Package, Wrench, BarChart3, AlertTriangle, UserPlus, Edit, Trash2, Settings, Shield } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from '@/components/ui/use-toast';
+import { Users, Package, Wrench, BarChart3, AlertTriangle, UserPlus, Edit, Trash2, Settings, Shield, Save, UserCheck } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
 export const AdminDashboard: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<string | null>(null);
 
   // Mock data for analytics
   const userGrowthData = [
@@ -39,13 +41,103 @@ export const AdminDashboard: React.FC = () => {
     { metric: 'Error Rate', value: '0.02%', trend: 'decreasing' }
   ];
 
-  // Mock users data
-  const users = [
-    { id: '1', name: 'John Farmer', email: 'john@farm.com', role: 'farmer', status: 'active', lastLogin: '2 hours ago' },
-    { id: '2', name: 'Sarah Extension', email: 'sarah@extension.com', role: 'extension_officer', status: 'active', lastLogin: '1 day ago' },
-    { id: '3', name: 'Mike Admin', email: 'mike@admin.com', role: 'admin', status: 'active', lastLogin: '30 minutes ago' },
-    { id: '4', name: 'Jane Farmer', email: 'jane@farm.com', role: 'farmer', status: 'inactive', lastLogin: '1 week ago' }
-  ];
+  // Enhanced users data with more realistic information
+  const [users, setUsers] = useState([
+    { id: '1', name: 'John Farmer', email: 'john@farm.com', role: 'farmer', status: 'active', lastLogin: '2 hours ago', joinDate: '2024-01-15' },
+    { id: '2', name: 'Sarah Extension', email: 'sarah@extension.com', role: 'extension_officer', status: 'active', lastLogin: '1 day ago', joinDate: '2024-02-20' },
+    { id: '3', name: 'Mike Admin', email: 'mike@admin.com', role: 'admin', status: 'active', lastLogin: '30 minutes ago', joinDate: '2024-01-01' },
+    { id: '4', name: 'Jane Farmer', email: 'jane@farm.com', role: 'farmer', status: 'inactive', lastLogin: '1 week ago', joinDate: '2024-03-10' },
+    { id: '5', name: 'David Extension', email: 'david@extension.com', role: 'extension_officer', status: 'active', lastLogin: '3 hours ago', joinDate: '2024-02-28' },
+    { id: '6', name: 'Lisa Farmer', email: 'lisa@farm.com', role: 'farmer', status: 'active', lastLogin: '5 minutes ago', joinDate: '2024-03-15' }
+  ]);
+
+  // Handle role change
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, role: newRole }
+            : user
+        )
+      );
+      
+      setEditingUser(null);
+      
+      toast({
+        title: "Role Updated Successfully",
+        description: `User role has been changed to ${newRole.replace('_', ' ')}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user role. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle user status toggle
+  const handleStatusToggle = async (userId: string) => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' }
+            : user
+        )
+      );
+      
+      toast({
+        title: "Status Updated",
+        description: "User status has been updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle user deletion
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+      
+      toast({
+        title: "User Deleted",
+        description: "User has been permanently deleted from the system",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete user",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'admin': return 'destructive';
+      case 'extension_officer': return 'secondary';
+      case 'farmer': return 'default';
+      default: return 'outline';
+    }
+  };
 
   const chartConfig = {
     users: {
@@ -131,35 +223,103 @@ export const AdminDashboard: React.FC = () => {
                 <CardTitle>Users Overview</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {users.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center space-x-4">
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                          <p className="text-xs text-muted-foreground">Last login: {user.lastLogin}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Badge variant={user.role === 'admin' ? 'destructive' : user.role === 'extension_officer' ? 'secondary' : 'default'}>
-                          {user.role.replace('_', ' ')}
-                        </Badge>
-                        <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                          {user.status}
-                        </Badge>
-                        <div className="flex space-x-1">
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Login</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{user.name}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {editingUser === user.id ? (
+                            <div className="flex items-center gap-2">
+                              <Select 
+                                defaultValue={user.role} 
+                                onValueChange={(value) => handleRoleChange(user.id, value)}
+                              >
+                                <SelectTrigger className="w-36">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="farmer">Farmer</SelectItem>
+                                  <SelectItem value="extension_officer">Extension Officer</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => setEditingUser(null)}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          ) : (
+                            <Badge variant={getRoleBadgeVariant(user.role)}>
+                              {user.role.replace('_', ' ')}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                              {user.status}
+                            </Badge>
+                            <Switch
+                              checked={user.status === 'active'}
+                              onCheckedChange={() => handleStatusToggle(user.id)}
+                              className="ml-2"
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">{user.lastLogin}</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {editingUser === user.id ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingUser(null)}
+                              >
+                                <Save className="h-3 w-3" />
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingUser(user.id)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </div>
@@ -375,13 +535,16 @@ export const AdminDashboard: React.FC = () => {
             
             <Card>
               <CardHeader>
-                <CardTitle>Role Permissions</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5" />
+                  Role Management & Permissions
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-3">
-                      <h4 className="font-medium">Farmer Permissions</h4>
+                      <h4 className="font-medium text-blue-700">Farmer Permissions</h4>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Label htmlFor="farmerRead">Read Own Data</Label>
@@ -395,11 +558,15 @@ export const AdminDashboard: React.FC = () => {
                           <Label htmlFor="farmerReports">Generate Reports</Label>
                           <Switch id="farmerReports" defaultChecked />
                         </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="farmerSupport">Request Support</Label>
+                          <Switch id="farmerSupport" defaultChecked />
+                        </div>
                       </div>
                     </div>
                     
                     <div className="space-y-3">
-                      <h4 className="font-medium">Extension Officer Permissions</h4>
+                      <h4 className="font-medium text-green-700">Extension Officer Permissions</h4>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Label htmlFor="extensionRead">Read Farmer Data</Label>
@@ -413,11 +580,15 @@ export const AdminDashboard: React.FC = () => {
                           <Label htmlFor="extensionReports">System Reports</Label>
                           <Switch id="extensionReports" defaultChecked />
                         </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="extensionTraining">Manage Training</Label>
+                          <Switch id="extensionTraining" defaultChecked />
+                        </div>
                       </div>
                     </div>
                     
                     <div className="space-y-3">
-                      <h4 className="font-medium">Admin Permissions</h4>
+                      <h4 className="font-medium text-red-700">Admin Permissions</h4>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Label htmlFor="adminUsers">Manage Users</Label>
@@ -431,6 +602,24 @@ export const AdminDashboard: React.FC = () => {
                           <Label htmlFor="adminBackup">Data Backup</Label>
                           <Switch id="adminBackup" defaultChecked />
                         </div>
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="adminRoles">Manage Roles</Label>
+                          <Switch id="adminRoles" defaultChecked disabled />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium mb-3">Role Assignment Rules</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-2">
+                        <p><strong>Farmer → Extension Officer:</strong> Requires admin approval</p>
+                        <p><strong>Farmer → Admin:</strong> Requires super admin approval</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p><strong>Extension Officer → Admin:</strong> Requires super admin approval</p>
+                        <p><strong>Admin → Other Roles:</strong> Requires super admin approval</p>
                       </div>
                     </div>
                   </div>
@@ -440,7 +629,10 @@ export const AdminDashboard: React.FC = () => {
             
             <div className="flex justify-end space-x-3">
               <Button variant="outline">Reset to Defaults</Button>
-              <Button>Save Settings</Button>
+              <Button onClick={() => toast({ title: "Settings Saved", description: "All settings have been saved successfully" })}>
+                <Save className="h-4 w-4 mr-2" />
+                Save Settings
+              </Button>
             </div>
           </div>
         </TabsContent>

@@ -1,5 +1,5 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Supply {
@@ -18,7 +18,11 @@ export interface Supply {
   updated_at: string;
 }
 
+export type CreateSupplyData = Omit<Supply, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'status'>;
+
 export const useSupplies = () => {
+  const queryClient = useQueryClient();
+
   const { data: supplies, isLoading, error, refetch } = useQuery({
     queryKey: ['supplies'],
     queryFn: async () => {
@@ -35,6 +39,25 @@ export const useSupplies = () => {
 
       console.log('Supplies fetched:', data);
       return data as Supply[];
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (supply: CreateSupplyData) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('supplies')
+        .insert({ ...supply, user_id: user.id })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supplies'] });
     },
   });
 
@@ -84,5 +107,7 @@ export const useSupplies = () => {
     updateSupply,
     deleteSupply,
     refetch,
+    createSupply: createMutation.mutate,
+    isCreating: createMutation.isPending,
   };
 };

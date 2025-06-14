@@ -1,5 +1,5 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Equipment {
@@ -7,7 +7,7 @@ export interface Equipment {
   name: string;
   category: string;
   description?: string;
-  status: 'operational' | 'maintenance' | 'repair' | 'out_of_service';
+  status: 'operational' | 'maintenance' | 'repair' | 'retired';
   purchase_date?: string;
   purchase_cost?: number;
   last_maintenance_date?: string;
@@ -17,7 +17,11 @@ export interface Equipment {
   updated_at: string;
 }
 
+export type CreateEquipmentData = Omit<Equipment, 'id' | 'created_at' | 'updated_at' | 'user_id'>;
+
 export const useEquipment = () => {
+  const queryClient = useQueryClient();
+
   const { data: equipment, isLoading, error, refetch } = useQuery({
     queryKey: ['equipment'],
     queryFn: async () => {
@@ -37,13 +41,32 @@ export const useEquipment = () => {
     },
   });
 
+  const createMutation = useMutation({
+    mutationFn: async (equipmentData: CreateEquipmentData) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('equipment')
+        .insert({ ...equipmentData, user_id: user.id })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['equipment'] });
+    },
+  });
+
   const addEquipment = async (equipmentData: Omit<Equipment, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
       .from('equipment')
-      .insert([{ ...equipmentData, user_id: user.id }])
+      .insert({ ...equipmentData, user_id: user.id })
       .select()
       .single();
 
@@ -83,5 +106,7 @@ export const useEquipment = () => {
     updateEquipment,
     deleteEquipment,
     refetch,
+    createEquipment: createMutation.mutate,
+    isCreating: createMutation.isPending,
   };
 };

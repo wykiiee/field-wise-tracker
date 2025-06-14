@@ -44,8 +44,8 @@ export const EquipmentManagement: React.FC = () => {
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Maintenance</Badge>;
       case 'repair':
         return <Badge variant="destructive">Needs Repair</Badge>;
-      case 'out_of_service':
-        return <Badge variant="destructive">Out of Service</Badge>;
+      case 'retired':
+        return <Badge variant="destructive">Retired</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

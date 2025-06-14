@@ -1,263 +1,110 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useSupplies } from '@/hooks/useSupplies';
-import { useEquipment } from '@/hooks/useEquipment';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, DollarSign, Package, Wrench } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { FileText, Download, Calendar, TrendingUp, PieChart, BarChart3 } from 'lucide-react';
 
 export const ReportsSection: React.FC = () => {
-  const { supplies, isLoading: suppliesLoading } = useSupplies();
-  const { equipment, isLoading: equipmentLoading } = useEquipment();
+  const reports = [
+    {
+      id: '1',
+      title: 'Inventory Summary',
+      description: 'Complete overview of all supplies and equipment',
+      type: 'summary',
+      lastGenerated: '2 days ago',
+      icon: <PieChart className="h-4 w-4" />
+    },
+    {
+      id: '2',
+      title: 'Low Stock Report',
+      description: 'Items that need restocking soon',
+      type: 'alert',
+      lastGenerated: '1 day ago',
+      icon: <TrendingUp className="h-4 w-4" />
+    },
+    {
+      id: '3',
+      title: 'Equipment Maintenance',
+      description: 'Maintenance schedules and history',
+      type: 'maintenance',
+      lastGenerated: '3 days ago',
+      icon: <BarChart3 className="h-4 w-4" />
+    },
+    {
+      id: '4',
+      title: 'Cost Analysis',
+      description: 'Monthly spending and cost breakdown',
+      type: 'financial',
+      lastGenerated: '1 week ago',
+      icon: <FileText className="h-4 w-4" />
+    }
+  ];
 
-  if (suppliesLoading || equipmentLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="relative rounded-xl overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-          <div className="relative p-6">
-            <h2 className="text-2xl font-bold mb-2">Reports & Analytics</h2>
-            <p className="text-purple-100">Track your farm's inventory and equipment performance</p>
-          </div>
-        </div>
-        
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-muted-foreground text-lg">Loading reports...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Supply category data for charts
-  const supplyCategoryData = supplies.reduce((acc, supply) => {
-    acc[supply.category] = (acc[supply.category] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const supplyCategoryChart = Object.entries(supplyCategoryData).map(([category, count]) => ({
-    category,
-    count,
-  }));
-
-  // Equipment category data
-  const equipmentCategoryData = equipment.reduce((acc, item) => {
-    acc[item.category] = (acc[item.category] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const equipmentCategoryChart = Object.entries(equipmentCategoryData).map(([category, count]) => ({
-    category,
-    count,
-  }));
-
-  // Status distribution for supplies
-  const supplyStatusData = supplies.reduce((acc, supply) => {
-    acc[supply.status] = (acc[supply.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const supplyStatusChart = Object.entries(supplyStatusData).map(([status, count]) => ({
-    status: status.replace('_', ' '),
-    count,
-  }));
-
-  // Equipment status data
-  const equipmentStatusData = equipment.reduce((acc, item) => {
-    acc[item.status] = (acc[item.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const equipmentStatusChart = Object.entries(equipmentStatusData).map(([status, count]) => ({
-    status,
-    count,
-  }));
-
-  // Calculate total values
-  const totalSupplyValue = supplies.reduce((sum, supply) => {
-    return sum + (supply.cost_per_unit ? supply.quantity * supply.cost_per_unit : 0);
-  }, 0);
-
-  const totalEquipmentValue = equipment.reduce((sum, item) => {
-    return sum + (item.purchase_cost || 0);
-  }, 0);
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  const getReportBadgeColor = (type: string) => {
+    switch (type) {
+      case 'summary': return 'bg-blue-100 text-blue-800';
+      case 'alert': return 'bg-red-100 text-red-800';
+      case 'maintenance': return 'bg-orange-100 text-orange-800';
+      case 'financial': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="relative rounded-xl overflow-hidden bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')`
-          }}
-        />
-        <div className="relative p-6">
-          <h2 className="text-2xl font-bold mb-2">Reports & Analytics</h2>
-          <p className="text-purple-100">Track your farm's inventory and equipment performance</p>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-orange-600" />
+          Reports & Analytics
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {reports.map((report) => (
+          <div key={report.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex items-start space-x-3">
+              <div className={`p-2 rounded-lg ${getReportBadgeColor(report.type)}`}>
+                {report.icon}
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900">{report.title}</h4>
+                <p className="text-sm text-gray-600 mb-1">{report.description}</p>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className={getReportBadgeColor(report.type)}>
+                    {report.type}
+                  </Badge>
+                  <span className="text-xs text-gray-500 flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {report.lastGenerated}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline">
+                <Download className="h-4 w-4 mr-1" />
+                Download
+              </Button>
+              <Button size="sm">
+                Generate
+              </Button>
+            </div>
+          </div>
+        ))}
+
+        <div className="border-t pt-4 mt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-semibold text-gray-900">Custom Report</h4>
+              <p className="text-sm text-gray-600">Generate a custom report with specific parameters</p>
+            </div>
+            <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
+              <FileText className="h-4 w-4 mr-2" />
+              Create Custom Report
+            </Button>
+          </div>
         </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">Total Supplies</CardTitle>
-            <Package className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-900">{supplies.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-green-50 to-green-100">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-700">Supply Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-900">${totalSupplyValue.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700">Total Equipment</CardTitle>
-            <Wrench className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-900">{equipment.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700">Equipment Value</CardTitle>
-            <TrendingUp className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-900">${totalEquipmentValue.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Supply Categories Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Supply Categories</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {supplyCategoryChart.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={supplyCategoryChart}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="category" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#3B82F6" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-300 flex items-center justify-center text-gray-500">
-                No supply data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Equipment Categories Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Equipment Categories</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {equipmentCategoryChart.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={equipmentCategoryChart}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="category" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#8B5CF6" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-300 flex items-center justify-center text-gray-500">
-                No equipment data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Supply Status Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Supply Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {supplyStatusChart.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={supplyStatusChart}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="count"
-                    label={({ status, count }) => `${status}: ${count}`}
-                  >
-                    {supplyStatusChart.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-300 flex items-center justify-center text-gray-500">
-                No supply status data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Equipment Status Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Equipment Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {equipmentStatusChart.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={equipmentStatusChart}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="count"
-                    label={({ status, count }) => `${status}: ${count}`}
-                  >
-                    {equipmentStatusChart.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-300 flex items-center justify-center text-gray-500">
-                No equipment status data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

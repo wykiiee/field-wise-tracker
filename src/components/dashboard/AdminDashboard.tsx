@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { Users, Package, Wrench, BarChart3, AlertTriangle, UserPlus, Edit, Trash2, Settings, Shield, Save, UserCheck } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
@@ -51,12 +52,21 @@ export const AdminDashboard: React.FC = () => {
     { id: '6', name: 'Lisa Farmer', email: 'lisa@farm.com', role: 'farmer', status: 'active', lastLogin: '5 minutes ago', joinDate: '2024-03-15' }
   ]);
 
-  // Handle role change
+  // Handle role change with proper state management
   const handleRoleChange = async (userId: string, newRole: string) => {
+    console.log(`Changing role for user ${userId} to ${newRole}`);
+    
     try {
+      // Show loading state
+      toast({
+        title: "Updating Role...",
+        description: "Please wait while we update the user role.",
+      });
+
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Update the users state
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user.id === userId 
@@ -65,13 +75,18 @@ export const AdminDashboard: React.FC = () => {
         )
       );
       
+      // Clear editing state
       setEditingUser(null);
       
+      // Show success message
       toast({
         title: "Role Updated Successfully",
         description: `User role has been changed to ${newRole.replace('_', ' ')}`,
       });
+      
+      console.log(`Role updated successfully for user ${userId}`);
     } catch (error) {
+      console.error('Error updating user role:', error);
       toast({
         title: "Error",
         description: "Failed to update user role. Please try again.",
@@ -82,7 +97,17 @@ export const AdminDashboard: React.FC = () => {
 
   // Handle user status toggle
   const handleStatusToggle = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    console.log(`Toggling status for user ${userId} from ${user.status}`);
+    
     try {
+      toast({
+        title: "Updating Status...",
+        description: "Please wait while we update the user status.",
+      });
+
       await new Promise(resolve => setTimeout(resolve, 500));
       
       setUsers(prevUsers => 
@@ -95,9 +120,10 @@ export const AdminDashboard: React.FC = () => {
       
       toast({
         title: "Status Updated",
-        description: "User status has been updated successfully",
+        description: `User status has been updated to ${user.status === 'active' ? 'inactive' : 'active'}`,
       });
     } catch (error) {
+      console.error('Error updating user status:', error);
       toast({
         title: "Error",
         description: "Failed to update user status",
@@ -108,20 +134,31 @@ export const AdminDashboard: React.FC = () => {
 
   // Handle user deletion
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    if (!confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
       return;
     }
     
+    console.log(`Deleting user ${userId}`);
+    
     try {
+      toast({
+        title: "Deleting User...",
+        description: "Please wait while we delete the user.",
+      });
+
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
       
       toast({
         title: "User Deleted",
-        description: "User has been permanently deleted from the system",
+        description: `${user.name} has been permanently deleted from the system`,
       });
     } catch (error) {
+      console.error('Error deleting user:', error);
       toast({
         title: "Error",
         description: "Failed to delete user",
@@ -160,7 +197,7 @@ export const AdminDashboard: React.FC = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">127</div>
+            <div className="text-2xl font-bold">{users.length}</div>
             <p className="text-xs text-muted-foreground">+8 new this month</p>
           </CardContent>
         </Card>
@@ -247,10 +284,13 @@ export const AdminDashboard: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <Select 
                                 defaultValue={user.role} 
-                                onValueChange={(value) => handleRoleChange(user.id, value)}
+                                onValueChange={(value) => {
+                                  console.log(`Role selection changed to: ${value}`);
+                                  handleRoleChange(user.id, value);
+                                }}
                               >
-                                <SelectTrigger className="w-36">
-                                  <SelectValue />
+                                <SelectTrigger className="w-40">
+                                  <SelectValue placeholder="Select role" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="farmer">Farmer</SelectItem>
@@ -261,7 +301,10 @@ export const AdminDashboard: React.FC = () => {
                               <Button 
                                 size="sm" 
                                 variant="outline"
-                                onClick={() => setEditingUser(null)}
+                                onClick={() => {
+                                  console.log('Cancelling role edit');
+                                  setEditingUser(null);
+                                }}
                               >
                                 Cancel
                               </Button>
@@ -294,6 +337,7 @@ export const AdminDashboard: React.FC = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => setEditingUser(null)}
+                                disabled
                               >
                                 <Save className="h-3 w-3" />
                               </Button>
@@ -301,7 +345,10 @@ export const AdminDashboard: React.FC = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => setEditingUser(user.id)}
+                                onClick={() => {
+                                  console.log(`Starting to edit user: ${user.id}`);
+                                  setEditingUser(user.id);
+                                }}
                               >
                                 <Edit className="h-3 w-3" />
                               </Button>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSupplies } from '@/hooks/useSupplies';
 import { useEquipment } from '@/hooks/useEquipment';
@@ -20,7 +19,7 @@ export const FarmerDashboard = () => {
   const suppliesCount = supplies?.length || 0;
   const equipmentCount = equipment?.length || 0;
   const lowStockCount = supplies?.filter(supply => supply.status === 'low_stock' || supply.status === 'out_of_stock').length || 0;
-  const maintenanceDueCount = equipment?.filter(item => item.status === 'maintenance_required').length || 0;
+  const maintenanceDueCount = equipment?.filter(item => item.status === 'maintenance' || item.status === 'repair').length || 0;
 
   // Prepare chart data
   const suppliesData = supplies ? 
